@@ -41,7 +41,11 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
         )
         rvRepoList.adapter = adapter
         viewModel.oNewReposEvent.observe(this) { newReposEvent ->
-            val adapterItems = newReposEvent.repos.map { RepoAdapterItem(it) }
+            if (!newReposEvent.newSearch && newReposEvent.repos == null) {
+                adapter.onLoadMoreComplete(null)
+                return@observe
+            }
+            val adapterItems = newReposEvent.repos!!.map { RepoAdapterItem(it) }
             if (newReposEvent.newSearch) {
                 adapter.clear()
                 adapter.addItems(-1, adapterItems)
@@ -50,12 +54,11 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
             }
 
         }
-        viewModel.newSearch("tetris")
+        viewModel.newSearch("truthse")
         //  Set endless scroll
         progressItem = ProgressItem()
         adapter.setEndlessScrollListener(SimpleEndlessScrollListener(), progressItem)
         viewModel.totalItemCount.observe(this) { adapter.setEndlessTargetCount(it) }
-
     }
 
     class RepoAdapterItem(private val repo: RepoUI) :

@@ -20,8 +20,8 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
 
     //  TODO Make non-null
     var totalItemCount = MutableLiveData(0)
-    private var totalPageCount = 0
-    private var currentPage = 0
+    private var totalPageCount = -1
+    private var currentPage = -1
     private var lastQuery = ""
 
     init {
@@ -44,6 +44,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
 
     fun loadMore(): Boolean {
         if (currentPage == totalPageCount) {
+            oNewReposEvent.postValue(NewReposEvent(false, null))
             return false
         }
         viewModelScope.launch {
