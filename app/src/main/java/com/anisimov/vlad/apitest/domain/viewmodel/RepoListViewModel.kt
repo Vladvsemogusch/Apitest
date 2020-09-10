@@ -17,8 +17,10 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
 
     val oLoading = MutableLiveData(false)
     val oNewReposEvent: MutableLiveData<NewReposEvent> = LiveEvent<NewReposEvent>()
+
+    //  TODO Make non-null
+    var totalItemCount = MutableLiveData(0)
     private var totalPageCount = 0
-    private var totalItemCount = 0
     private var currentPage = 0
     private var lastQuery = ""
 
@@ -27,30 +29,27 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
     }
 
 
-    fun search(query: String) {
-        if (query == lastQuery) {
-            loadMore(query)
-        } else {
-            newSearch(query)
-        }
-    }
-
-    private fun newSearch(query: String) {
+    fun newSearch(query: String) {
+        lastQuery = query
         viewModelScope.launch {
             val newSearchResultUI = repo.getNewSearchResult(query)
-            totalItemCount = newSearchResultUI.totalCount
-            totalPageCount = ceil(totalItemCount.toDouble() / ITEMS_PER_PAGE_UI.toDouble()).toInt()
+            totalItemCount.value = newSearchResultUI.totalCount
+            totalPageCount =
+                ceil(totalItemCount.value!!.toDouble() / ITEMS_PER_PAGE_UI.toDouble()).toInt()
             val event = NewReposEvent(true, newSearchResultUI.repos)
+            currentPage = 1
             oNewReposEvent.postValue(event)
         }
     }
 
-    private fun loadMore(query: String): Boolean {
+    fun loadMore(): Boolean {
         if (currentPage == totalPageCount) {
             return false
         }
         viewModelScope.launch {
-            val moreRepos = repo.getMoreSearchResults(query, currentPage + 1, totalItemCount)
+            val moreRepos =
+                repo.getMoreSearchResults(lastQuery, currentPage + 1, totalItemCount.value!!)
+            currentPage++
             oNewReposEvent.postValue(NewReposEvent(false, moreRepos))
         }
         return true
