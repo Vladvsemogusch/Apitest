@@ -32,7 +32,7 @@ data class RepoItemNetwork(
     val defaultBranch: String?,
     @SerializedName("deployments_url")
     val deploymentsUrl: String?,
-    val description: String?,
+    val description: String,
     val disabled: Boolean?,
     @SerializedName("downloads_url")
     val downloadsUrl: String?,
@@ -69,7 +69,7 @@ data class RepoItemNetwork(
     val hooksUrl: String?,
     @SerializedName("html_url")
     val htmlUrl: String?,
-    val id: Int?,
+    val id: Int,
     @SerializedName("issue_comment_url")
     val issueCommentUrl: String?,
     @SerializedName("issue_events_url")
@@ -90,7 +90,7 @@ data class RepoItemNetwork(
     val milestonesUrl: String?,
     @SerializedName("mirror_url")
     val mirrorUrl: Any?,
-    val name: String?,
+    val name: String,
     @SerializedName("node_id")
     val nodeId: String?,
     @SerializedName("notifications_url")
