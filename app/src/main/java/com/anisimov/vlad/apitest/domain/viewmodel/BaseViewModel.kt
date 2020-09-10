@@ -6,7 +6,7 @@ import com.anisimov.vlad.apitest.data.repository.Repository
 
 abstract class BaseViewModel<R : Repository>(app: Application) : AndroidViewModel(app) {
     //  provideRepo doesn't depend on derived class state and never will so it's ok
-    private var repo: R = provideRepo()
+    protected var repo: R = provideRepo()
 
     protected abstract fun provideRepo(): R
 }
