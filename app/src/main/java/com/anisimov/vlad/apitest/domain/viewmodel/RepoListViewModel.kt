@@ -16,7 +16,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
     }
 
     val oLoading = MutableLiveData(false)
-    private val oNewReposEvent: MutableLiveData<NewReposEvent> = LiveEvent<NewReposEvent>()
+    val oNewReposEvent: MutableLiveData<NewReposEvent> = LiveEvent<NewReposEvent>()
     private var totalPageCount = 0
     private var totalItemCount = 0
     private var currentPage = 0
