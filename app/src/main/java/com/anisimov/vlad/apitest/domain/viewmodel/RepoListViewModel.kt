@@ -15,7 +15,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
         const val ITEMS_PER_PAGE_UI = 30
     }
 
-    val oLoading = MutableLiveData(false)
+    val oNewSearchLoading = MutableLiveData(false)
     val oNewReposEvent: MutableLiveData<NewReposEvent> = LiveEvent<NewReposEvent>()
 
     //  TODO Make non-null
@@ -30,6 +30,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
 
 
     fun newSearch(query: String) {
+        oNewSearchLoading.value = true
         lastQuery = query
         viewModelScope.launch {
             val newSearchResultUI = repo.getNewSearchResult(query)
@@ -38,6 +39,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
                 ceil(totalItemCount.value!!.toDouble() / ITEMS_PER_PAGE_UI.toDouble()).toInt()
             val event = NewReposEvent(true, newSearchResultUI.repos)
             currentPage = 1
+            oNewSearchLoading.postValue(false)
             oNewReposEvent.postValue(event)
         }
     }

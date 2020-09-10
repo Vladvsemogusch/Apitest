@@ -3,6 +3,8 @@ package com.anisimov.vlad.apitest.ui.activity
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.widget.TextView
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,6 +28,7 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupRepoList()
+        setupLoading()
     }
 
     @SuppressLint("Range")
@@ -54,11 +57,21 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
             }
 
         }
-        viewModel.newSearch("truthse")
+        viewModel.newSearch("tetris")
         //  Set endless scroll
         progressItem = ProgressItem()
         adapter.setEndlessScrollListener(SimpleEndlessScrollListener(), progressItem)
         viewModel.totalItemCount.observe(this) { adapter.setEndlessTargetCount(it) }
+    }
+
+    private fun setupLoading() {
+        viewModel.oNewSearchLoading.observe(this) { loading ->
+            if (loading) {
+                loadingOverlay.visibility = VISIBLE
+            } else {
+                loadingOverlay.visibility = GONE
+            }
+        }
     }
 
     class RepoAdapterItem(private val repo: RepoUI) :
