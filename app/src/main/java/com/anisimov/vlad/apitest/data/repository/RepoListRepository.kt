@@ -40,7 +40,7 @@ class RepoListRepository : Repository {
             val searchResponseSecondPage = githubApi.getRepositories(query, 1, itemsPerPageNetwork)
             tempReposNetwork += searchResponseSecondPage.items
         }
-        val reposUI = tempReposNetwork.map { RepoUI(it.id, it.name, it.description) }
+        val reposUI = tempReposNetwork.map { RepoUI(it.id, it.name, it.description ?: "") }
         NewSearchResultUI(searchResponseFirstPage.totalCount, reposUI)
     }
 
@@ -65,12 +65,14 @@ class RepoListRepository : Repository {
         if (startItemCount + itemsPerPageNetwork + 1 <= totalCount) {
             val pageNetwork = pageUI * 2
             searchResponseSecondPage =
-                async{githubApi.getRepositories(query, pageNetwork, itemsPerPageNetwork)}
+                async { githubApi.getRepositories(query, pageNetwork, itemsPerPageNetwork) }
 
         }
-        searchResponseFirstPage?.let {  tempReposNetwork += it.await().items }
-        searchResponseSecondPage?.let {  tempReposNetwork += it.await().items }
-        tempReposNetwork.map { RepoUI(it.id, it.name, it.description) }
+        searchResponseFirstPage?.let { tempReposNetwork += it.await().items }
+        searchResponseSecondPage?.let { tempReposNetwork += it.await().items }
+        tempReposNetwork.map {
+            RepoUI(it.id, it.name, it.description ?: "")
+        }
     }
 
 
