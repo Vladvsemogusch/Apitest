@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.anisimov.vlad.apitest.R
 import com.anisimov.vlad.apitest.domain.model.RepoUI
 import com.anisimov.vlad.apitest.domain.viewmodel.RepoListViewModel
+import com.anisimov.vlad.apitest.ui.view.ProgressItem
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import eu.davidea.flexibleadapter.items.IFlexible
@@ -17,7 +18,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 
 class RepoListActivity : BaseActivity<RepoListViewModel>() {
-
+    lateinit var adapter: FlexibleAdapter<AbstractFlexibleItem<*>>
+    lateinit var progressItem: ProgressItem
     override fun provideViewModelClass(): Class<RepoListViewModel> = RepoListViewModel::class.java
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,7 +32,7 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
     private fun setupRepoList() {
         val layoutManager = LinearLayoutManager(this)
         rvRepoList.layoutManager = layoutManager
-        val adapter = FlexibleAdapter<RepoAdapterItem>(ArrayList())
+        adapter = FlexibleAdapter<AbstractFlexibleItem<*>>(ArrayList())
         rvRepoList.addItemDecoration(
             DividerItemDecoration(
                 rvRepoList.context,
@@ -39,13 +41,21 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
         )
         rvRepoList.adapter = adapter
         viewModel.oNewReposEvent.observe(this) { newReposEvent ->
+            val adapterItems = newReposEvent.repos.map { RepoAdapterItem(it) }
             if (newReposEvent.newSearch) {
                 adapter.clear()
+                adapter.addItems(-1, adapterItems)
+            } else {
+                adapter.onLoadMoreComplete(adapterItems)
             }
-            val adapterItems = newReposEvent.repos.map { RepoAdapterItem(it) }
-            adapter.addItems(-1, adapterItems)
+
         }
-        viewModel.search("tetris")
+        viewModel.newSearch("tetris")
+        //  Set endless scroll
+        progressItem = ProgressItem()
+        adapter.setEndlessScrollListener(SimpleEndlessScrollListener(), progressItem)
+        viewModel.totalItemCount.observe(this) { adapter.setEndlessTargetCount(it) }
+
     }
 
     class RepoAdapterItem(private val repo: RepoUI) :
@@ -90,5 +100,14 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
         }
     }
 
+    inner class SimpleEndlessScrollListener : FlexibleAdapter.EndlessScrollListener {
+        override fun noMoreLoad(newItemsSize: Int) {
 
+        }
+
+        override fun onLoadMore(lastPosition: Int, currentPage: Int) {
+            viewModel.loadMore()
+        }
+
+    }
 }
