@@ -45,7 +45,8 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
         }
         job.invokeOnCompletion { cause ->
             if (cause is CancellationException) {
-                onError()
+                oNewSearchLoading.value = false
+                oNewReposEvent.postValue(NewReposEvent(true, ArrayList()))
             }
         }
     }
@@ -63,15 +64,9 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
         }
         job.invokeOnCompletion { cause ->
             if (cause is CancellationException) {
-                onError()
+                oNewReposEvent.postValue(NewReposEvent(false, null))
             }
         }
-    }
-
-
-    private fun onError() {
-        oNewSearchLoading.value = false
-        oNewReposEvent.postValue(NewReposEvent(false, null))
     }
 
     override fun provideRepo(): RepoListRepository = RepoListRepository()
