@@ -1,11 +1,11 @@
-package com.anisimov.vlad.apitest.ui.activity
+package com.anisimov.vlad.apitest.ui.fragment
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
 
-abstract class BaseActivity<VM : AndroidViewModel> : AppCompatActivity(){
+abstract class BaseFragment<VM : AndroidViewModel> : Fragment() {
     protected lateinit var viewModel: VM
 
     override fun onCreate(savedInstanceState: Bundle?) {

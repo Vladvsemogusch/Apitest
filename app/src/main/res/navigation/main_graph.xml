@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_nav"
+    app:startDestination="@id/repoListFragment">
+
+    <fragment
+        android:id="@+id/repoListFragment"
+        android:name="com.anisimov.vlad.apitest.ui.fragment.RepoListFragment"
+        android:label="RepoListFragment" />
+</navigation>

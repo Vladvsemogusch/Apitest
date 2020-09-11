@@ -1,16 +1,17 @@
-package com.anisimov.vlad.apitest.ui.activity
+package com.anisimov.vlad.apitest.ui.fragment
 
 import android.annotation.SuppressLint
-import android.app.SearchManager
-import android.content.Context
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.SearchView
 import android.widget.TextView
 import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.anisimov.vlad.apitest.R
@@ -21,27 +22,36 @@ import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import eu.davidea.flexibleadapter.items.IFlexible
 import eu.davidea.viewholders.FlexibleViewHolder
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_repo_list.*
 import kotlinx.android.synthetic.main.toolbar.*
 
 
-class RepoListActivity : BaseActivity<RepoListViewModel>() {
+class RepoListFragment : BaseFragment<RepoListViewModel>() {
     private lateinit var listAdapter: FlexibleAdapter<AbstractFlexibleItem<*>>
     private lateinit var progressItem: ProgressItem
     override fun provideViewModelClass(): Class<RepoListViewModel> = RepoListViewModel::class.java
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        return inflater.inflate(R.layout.fragment_repo_list, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val activity = requireActivity() as AppCompatActivity
+        activity.setSupportActionBar(toolbar)
         //  Make room for SearchView
-        title = ""
+        activity.title = ""
         setupRepoList()
         setupLoading()
         setupSearch()
     }
 
     private fun setupSearch() {
-        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 handleNewSearch(query)
@@ -63,7 +73,7 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
 
     @SuppressLint("Range")
     private fun setupRepoList() {
-        val layoutManager = LinearLayoutManager(this)
+        val layoutManager = LinearLayoutManager(requireContext())
         rvRepoList.layoutManager = layoutManager
         listAdapter = FlexibleAdapter<AbstractFlexibleItem<*>>(ArrayList())
         rvRepoList.addItemDecoration(
@@ -73,7 +83,7 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
             )
         )
         rvRepoList.adapter = listAdapter
-        viewModel.oNewReposEvent.observe(this) { newReposEvent ->
+        viewModel.oNewReposEvent.observe(viewLifecycleOwner) { newReposEvent ->
             if (!newReposEvent.newSearch && newReposEvent.repos == null) {
                 listAdapter.onLoadMoreComplete(null)
                 return@observe
@@ -89,7 +99,7 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
         //  Setup endless scroll
         progressItem = ProgressItem()
         listAdapter.setEndlessScrollListener(SimpleEndlessScrollListener(), progressItem)
-        viewModel.totalItemCount.observe(this) { listAdapter.setEndlessTargetCount(it) }
+        viewModel.totalItemCount.observe(viewLifecycleOwner) { listAdapter.setEndlessTargetCount(it) }
         // Favorites
         listAdapter.addListener(FlexibleAdapter.OnItemClickListener { view: View, position: Int ->
             if (view.id == R.id.ivFavorite) {
@@ -107,7 +117,7 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
     }
 
     private fun setupLoading() {
-        viewModel.oNewSearchLoading.observe(this) { loading ->
+        viewModel.oNewSearchLoading.observe(viewLifecycleOwner) { loading ->
             if (loading) {
                 loadingOverlay.visibility = VISIBLE
             } else {
