@@ -93,4 +93,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
         }
     }
 
+    fun forgetLastQuery() {
+        lastQuery = ""
+    }
 }

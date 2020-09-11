@@ -133,6 +133,11 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        viewModel.forgetLastQuery()
+    }
+
 
     inner class SimpleEndlessScrollListener : FlexibleAdapter.EndlessScrollListener {
         override fun noMoreLoad(newItemsSize: Int) {
