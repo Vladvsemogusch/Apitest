@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.anisimov.vlad.apitest.data.repository.RepoListRepository
+import com.anisimov.vlad.apitest.domain.model.RepoUI
 import com.anisimov.vlad.apitest.domain.model.event.NewReposEvent
 import com.hadilq.liveevent.LiveEvent
 import kotlinx.coroutines.CancellationException
@@ -31,6 +32,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
         repo.init(ITEMS_PER_PAGE_UI)
     }
 
+    override fun provideRepo(): RepoListRepository = RepoListRepository()
 
     fun newSearch(query: String) {
         if (lastQuery == query) {
@@ -78,5 +80,16 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
         }
     }
 
-    override fun provideRepo(): RepoListRepository = RepoListRepository()
+
+    fun addFavorite(repoUI: RepoUI) {
+        viewModelScope.launch {
+            repo.addFavorite(repoUI.id, repoUI.name, repoUI.description)
+        }
+    }
+
+    fun removeFavorite(repoUI: RepoUI) {
+        viewModelScope.launch {
+            repo.removeFavorite(repoUI.id, repoUI.name, repoUI.description)
+        }
+    }
 }

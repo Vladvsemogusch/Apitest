@@ -69,7 +69,7 @@ data class RepoItemNetwork(
     val hooksUrl: String?,
     @SerializedName("html_url")
     val htmlUrl: String?,
-    val id: Int,
+    val id: Long,
     @SerializedName("issue_comment_url")
     val issueCommentUrl: String?,
     @SerializedName("issue_events_url")

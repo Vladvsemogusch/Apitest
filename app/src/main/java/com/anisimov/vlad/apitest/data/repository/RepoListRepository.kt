@@ -1,5 +1,7 @@
 package com.anisimov.vlad.apitest.data.repository
 
+import com.anisimov.vlad.apitest.data.db.AppDatabase
+import com.anisimov.vlad.apitest.data.model.db.FavoriteRepoDB
 import com.anisimov.vlad.apitest.data.model.network.RepoItemNetwork
 import com.anisimov.vlad.apitest.data.model.network.SearchResponseNetwork
 import com.anisimov.vlad.apitest.data.network.RestClient
@@ -18,6 +20,7 @@ class RepoListRepository : Repository() {
     }
 
     private val githubApi = RestClient.instance.githubApi
+    private val favoriteRepoDao = AppDatabase.instance.getFavoriteRepoDao()
     private var itemsPerPageNetwork = DEFAULT_ITEMS_PER_PAGE
     private var itemsPerPageUI = DEFAULT_ITEMS_PER_PAGE * 2
 
@@ -43,9 +46,15 @@ class RepoListRepository : Repository() {
                 handleResponse(githubApi.getRepositories(query, 1, itemsPerPageNetwork))
             tempReposNetwork += searchResponseSecondPage.items
         }
-        val reposUI = tempReposNetwork.map { RepoUI(it.id, it.name, it.description ?: "") }
+        val favoriteRepoIds = getFavoriteRepoIds()
+        val reposUI = tempReposNetwork.map {
+            val isFavorite = favoriteRepoIds.contains(it.id)
+            RepoUI(it.id, it.name, it.description ?: "", isFavorite)
+        }
         NewSearchResultUI(searchResponseFirstPage.totalCount, reposUI)
     }
+
+    private suspend fun getFavoriteRepoIds(): List<Long> = favoriteRepoDao.getAllIds()
 
     // Needs more parameters to know if we have enough items to load
     suspend fun getMoreSearchResults(
@@ -72,10 +81,24 @@ class RepoListRepository : Repository() {
         }
         searchResponseFirstPage?.let { tempReposNetwork += handleResponse(it.await()).items }
         searchResponseSecondPage?.let { tempReposNetwork += handleResponse(it.await()).items }
+        val favoriteRepoIds = getFavoriteRepoIds()
         tempReposNetwork.map {
-            RepoUI(it.id, it.name, it.description ?: "")
+            val isFavorite = favoriteRepoIds.contains(it.id)
+            RepoUI(it.id, it.name, it.description ?: "", isFavorite)
         }
     }
+
+    suspend fun addFavorite(id: Long, name: String, description: String) =
+        withContext(Dispatchers.IO) {
+            val favoriteRepoDB = FavoriteRepoDB(id, name, description)
+            favoriteRepoDao.add(favoriteRepoDB)
+        }
+
+    suspend fun removeFavorite(id: Long, name: String, description: String) =
+        withContext(Dispatchers.IO) {
+            val favoriteRepoDB = FavoriteRepoDB(id, name, description)
+            favoriteRepoDao.remove(favoriteRepoDB)
+        }
 
 
 }

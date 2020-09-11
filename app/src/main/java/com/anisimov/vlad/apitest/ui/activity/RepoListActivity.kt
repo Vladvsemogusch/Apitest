@@ -4,12 +4,13 @@ import android.annotation.SuppressLint
 import android.app.SearchManager
 import android.content.Context
 import android.os.Bundle
-import android.view.Menu
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.widget.ImageView
 import android.widget.SearchView
 import android.widget.TextView
+import androidx.annotation.DrawableRes
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.anisimov.vlad.apitest.R
@@ -84,12 +85,25 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
             } else {
                 listAdapter.onLoadMoreComplete(adapterItems)
             }
-
         }
         //  Setup endless scroll
         progressItem = ProgressItem()
         listAdapter.setEndlessScrollListener(SimpleEndlessScrollListener(), progressItem)
         viewModel.totalItemCount.observe(this) { listAdapter.setEndlessTargetCount(it) }
+        // Favorites
+        listAdapter.addListener(FlexibleAdapter.OnItemClickListener { view: View, position: Int ->
+            if (view.id == R.id.ivFavorite) {
+                val item = listAdapter.getItem(position) as RepoAdapterItem
+                if (item.isFavorite()) {
+                    viewModel.removeFavorite(item.repo)
+                } else {
+                    viewModel.addFavorite(item.repo)
+                }
+                //  ImageView not available from inside
+                item.toggleFavorite(view as ImageView)
+            }
+            true
+        })
     }
 
     private fun setupLoading() {
@@ -102,15 +116,9 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.options_menu, menu)
-        val searchView = menu.findItem(R.id.search).actionView as SearchView
-        searchView.isIconifiedByDefault = false
-        return true
-    }
-
-    class RepoAdapterItem(private val repo: RepoUI) :
+    class RepoAdapterItem(val repo: RepoUI) :
         AbstractFlexibleItem<RepoAdapterItem.RepoViewHolder>() {
+
 
         override fun equals(other: Any?): Boolean {
             if (other is RepoAdapterItem) {
@@ -120,7 +128,7 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
         }
 
         override fun hashCode(): Int {
-            return repo.id
+            return repo.id.hashCode()
         }
 
         override fun getLayoutRes(): Int {
@@ -141,13 +149,35 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
         ) {
             holder.tvRepoName.text = repo.name
             holder.tvRepoDescription.text = repo.description
+            @DrawableRes val imgResId = getFavoriteImageResId()
+            holder.ivIsFavorite.setImageResource(imgResId)
         }
+
+        private fun getFavoriteImageResId(isFavorite: Boolean = repo.isFavorite) = if (isFavorite) {
+            R.drawable.ic_heart_full
+        } else {
+            R.drawable.ic_heart_empty
+        }
+
+        fun isFavorite(): Boolean = repo.isFavorite
+
+        fun toggleFavorite(ivFavorite: ImageView) {
+            val isFavorite = !repo.isFavorite
+            repo.isFavorite = isFavorite
+            val imgResId = getFavoriteImageResId(isFavorite)
+            ivFavorite.setImageResource(imgResId)
+        }
+
 
         class RepoViewHolder(view: View, adapter: FlexibleAdapter<*>?) :
             FlexibleViewHolder(view, adapter) {
             val tvRepoName: TextView = view.findViewById(R.id.tvRepoName)
             val tvRepoDescription: TextView = view.findViewById(R.id.tvRepoDescription)
+            val ivIsFavorite: ImageView = view.findViewById(R.id.ivFavorite)
 
+            init {
+                ivIsFavorite.setOnClickListener(this)
+            }
         }
     }
 

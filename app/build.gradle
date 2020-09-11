@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 30
@@ -48,4 +49,8 @@ dependencies {
     implementation 'eu.davidea:flexible-adapter:5.1.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'eu.davidea:flexible-adapter-ui:1.0.0'
+    def room_version = "2.2.5"
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
 }
