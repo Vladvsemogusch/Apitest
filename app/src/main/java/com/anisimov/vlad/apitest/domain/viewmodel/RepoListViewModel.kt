@@ -35,7 +35,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
     override fun provideRepo(): RepoListRepository = RepoListRepository()
 
     fun newSearch(query: String) {
-        if (lastQuery == query) {
+        if (lastQuery == query || query.isBlank()) {
             return
         }
         //  Cancel if something is in progress
@@ -92,4 +92,5 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
             repo.removeFavorite(repoUI.id, repoUI.name, repoUI.description)
         }
     }
+
 }

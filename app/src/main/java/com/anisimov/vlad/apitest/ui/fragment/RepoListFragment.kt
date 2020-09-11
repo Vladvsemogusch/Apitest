@@ -2,6 +2,7 @@ package com.anisimov.vlad.apitest.ui.fragment
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -14,18 +15,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.anisimov.vlad.apitest.R
+import com.anisimov.vlad.apitest.domain.model.RepoUI
 import com.anisimov.vlad.apitest.domain.viewmodel.RepoListViewModel
 import com.anisimov.vlad.apitest.ui.item.RepoAdapterItem
 import com.anisimov.vlad.apitest.ui.view.ProgressItem
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import kotlinx.android.synthetic.main.fragment_repo_list.*
-import kotlinx.android.synthetic.main.toolbar.*
+import kotlinx.android.synthetic.main.search_toolbar.*
 
 
 class RepoListFragment : BaseFragment<RepoListViewModel>() {
     private lateinit var listAdapter: FlexibleAdapter<AbstractFlexibleItem<*>>
-    private lateinit var progressItem: ProgressItem
     override fun provideViewModelClass(): Class<RepoListViewModel> = RepoListViewModel::class.java
     override fun provideLayoutRes(): Int = R.layout.fragment_repo_list
 
@@ -36,14 +37,13 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val activity = requireActivity() as AppCompatActivity
-        activity.setSupportActionBar(toolbarView)
-        //  Make room for SearchView
-        activity.title = ""
+        setupToolbar("",false)
         setupRepoList()
         setupLoading()
         setupSearch()
     }
+
+
 
     private fun setupSearch() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -70,10 +70,10 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
         rvRepoList.layoutManager = layoutManager
         listAdapter = FlexibleAdapter<AbstractFlexibleItem<*>>(ArrayList())
         rvRepoList.addItemDecoration(
-            DividerItemDecoration(
-                rvRepoList.context,
-                layoutManager.orientation
-            )
+                DividerItemDecoration(
+                        rvRepoList.context,
+                        layoutManager.orientation
+                )
         )
         rvRepoList.adapter = listAdapter
         viewModel.oNewReposEvent.observe(viewLifecycleOwner) { newReposEvent ->
@@ -90,7 +90,7 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
             }
         }
         //  Setup endless scroll
-        progressItem = ProgressItem()
+        val progressItem = ProgressItem()
         listAdapter.setEndlessScrollListener(SimpleEndlessScrollListener(), progressItem)
         viewModel.totalItemCount.observe(viewLifecycleOwner) { listAdapter.setEndlessTargetCount(it) }
         // Favorites
@@ -102,7 +102,6 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
                 } else {
                     viewModel.addFavorite(item.repo)
                 }
-                //  ImageView not available from inside
                 item.toggleFavorite(view as ImageView)
             }
             true
@@ -126,7 +125,7 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.action_favorite -> {
-//            nav.navigate()
+            nav.navigate(R.id.action_repoListFragment_to_favoritesFragment)
             true
         }
         else -> {

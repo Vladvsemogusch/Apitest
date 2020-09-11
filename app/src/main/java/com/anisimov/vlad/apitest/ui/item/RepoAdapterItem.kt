@@ -31,7 +31,7 @@ class RepoAdapterItem(val repo: RepoUI) :
 
     override fun createViewHolder(
         view: View,
-        adapter: FlexibleAdapter<IFlexible<*>?>?
+        adapter: FlexibleAdapter<IFlexible<*>>
     ): RepoViewHolder {
         return RepoViewHolder(view, adapter)
     }
@@ -55,6 +55,7 @@ class RepoAdapterItem(val repo: RepoUI) :
 
     fun isFavorite(): Boolean = repo.isFavorite
 
+    //  ImageView not available from inside
     fun toggleFavorite(ivFavorite: ImageView) {
         val isFavorite = !repo.isFavorite
         repo.isFavorite = isFavorite
