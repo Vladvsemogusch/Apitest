@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.anisimov.vlad.apitest.data.repository.RepoListRepository
 import com.anisimov.vlad.apitest.domain.model.NewReposEvent
 import com.hadilq.liveevent.LiveEvent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
@@ -32,7 +33,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
     fun newSearch(query: String) {
         oNewSearchLoading.value = true
         lastQuery = query
-        viewModelScope.launch {
+        val job = viewModelScope.launch {
             val newSearchResultUI = repo.getNewSearchResult(query)
             totalItemCount.value = newSearchResultUI.totalCount
             totalPageCount =
@@ -42,20 +43,35 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
             oNewSearchLoading.postValue(false)
             oNewReposEvent.postValue(event)
         }
+        job.invokeOnCompletion { cause ->
+            if (cause is CancellationException) {
+                onError()
+            }
+        }
     }
 
-    fun loadMore(): Boolean {
+    fun loadMore() {
         if (currentPage == totalPageCount) {
             oNewReposEvent.postValue(NewReposEvent(false, null))
-            return false
+            return
         }
-        viewModelScope.launch {
+        val job = viewModelScope.launch {
             val moreRepos =
                 repo.getMoreSearchResults(lastQuery, currentPage + 1, totalItemCount.value!!)
             currentPage++
             oNewReposEvent.postValue(NewReposEvent(false, moreRepos))
         }
-        return true
+        job.invokeOnCompletion { cause ->
+            if (cause is CancellationException) {
+                onError()
+            }
+        }
+    }
+
+
+    private fun onError() {
+        oNewSearchLoading.value = false
+        oNewReposEvent.postValue(NewReposEvent(false, null))
     }
 
     override fun provideRepo(): RepoListRepository = RepoListRepository()

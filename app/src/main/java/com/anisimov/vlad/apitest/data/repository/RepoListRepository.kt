@@ -10,8 +10,9 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import retrofit2.Response
 
-class RepoListRepository : Repository {
+class RepoListRepository : Repository() {
     companion object {
         const val DEFAULT_ITEMS_PER_PAGE = 15
     }
@@ -34,10 +35,12 @@ class RepoListRepository : Repository {
     ) = withContext(Dispatchers.IO) {
         val tempReposNetwork = ArrayList<RepoItemNetwork>()
         //  Can't launch in parallel until totalCount is known
-        val searchResponseFirstPage = githubApi.getRepositories(query, 0, itemsPerPageNetwork)
+        val searchResponseFirstPage =
+            handleResponse(githubApi.getRepositories(query, 0, itemsPerPageNetwork))
         tempReposNetwork += searchResponseFirstPage.items
         if (searchResponseFirstPage.totalCount > itemsPerPageNetwork) {
-            val searchResponseSecondPage = githubApi.getRepositories(query, 1, itemsPerPageNetwork)
+            val searchResponseSecondPage =
+                handleResponse(githubApi.getRepositories(query, 1, itemsPerPageNetwork))
             tempReposNetwork += searchResponseSecondPage.items
         }
         val reposUI = tempReposNetwork.map { RepoUI(it.id, it.name, it.description ?: "") }
@@ -52,7 +55,7 @@ class RepoListRepository : Repository {
     ) = withContext(Dispatchers.IO) {
         val tempReposNetwork = ArrayList<RepoItemNetwork>()
         val startItemCount = (pageUI - 1) * itemsPerPageUI
-        var searchResponseFirstPage: Deferred<SearchResponseNetwork>? = null
+        var searchResponseFirstPage: Deferred<Response<SearchResponseNetwork>>? = null
         // Check if we actually have something to load
         if (startItemCount + 1 <= totalCount) {
             val pageNetwork = pageUI * 2 - 1
@@ -60,16 +63,15 @@ class RepoListRepository : Repository {
                 async { githubApi.getRepositories(query, pageNetwork, itemsPerPageNetwork) }
 
         }
-        var searchResponseSecondPage: Deferred<SearchResponseNetwork>? = null
+        var searchResponseSecondPage: Deferred<Response<SearchResponseNetwork>>? = null
         //  Check if we have enough items to load second page
         if (startItemCount + itemsPerPageNetwork + 1 <= totalCount) {
             val pageNetwork = pageUI * 2
             searchResponseSecondPage =
                 async { githubApi.getRepositories(query, pageNetwork, itemsPerPageNetwork) }
-
         }
-        searchResponseFirstPage?.let { tempReposNetwork += it.await().items }
-        searchResponseSecondPage?.let { tempReposNetwork += it.await().items }
+        searchResponseFirstPage?.let { tempReposNetwork += handleResponse(it.await()).items }
+        searchResponseSecondPage?.let { tempReposNetwork += handleResponse(it.await()).items }
         tempReposNetwork.map {
             RepoUI(it.id, it.name, it.description ?: "")
         }
