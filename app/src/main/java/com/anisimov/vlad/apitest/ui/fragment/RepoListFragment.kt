@@ -2,26 +2,23 @@ package com.anisimov.vlad.apitest.ui.fragment
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
-import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.SearchView
-import android.widget.TextView
-import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.anisimov.vlad.apitest.R
-import com.anisimov.vlad.apitest.domain.model.RepoUI
 import com.anisimov.vlad.apitest.domain.viewmodel.RepoListViewModel
+import com.anisimov.vlad.apitest.ui.item.RepoAdapterItem
 import com.anisimov.vlad.apitest.ui.view.ProgressItem
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
-import eu.davidea.flexibleadapter.items.IFlexible
-import eu.davidea.viewholders.FlexibleViewHolder
 import kotlinx.android.synthetic.main.fragment_repo_list.*
 import kotlinx.android.synthetic.main.toolbar.*
 
@@ -30,20 +27,17 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
     private lateinit var listAdapter: FlexibleAdapter<AbstractFlexibleItem<*>>
     private lateinit var progressItem: ProgressItem
     override fun provideViewModelClass(): Class<RepoListViewModel> = RepoListViewModel::class.java
+    override fun provideLayoutRes(): Int = R.layout.fragment_repo_list
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        return inflater.inflate(R.layout.fragment_repo_list, container, false)
+        setHasOptionsMenu(true)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val activity = requireActivity() as AppCompatActivity
-        activity.setSupportActionBar(toolbar)
+        activity.setSupportActionBar(toolbarView)
         //  Make room for SearchView
         activity.title = ""
         setupRepoList()
@@ -65,7 +59,6 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
         })
 
     }
-
 
     private fun handleNewSearch(query: String) {
         viewModel.newSearch(query)
@@ -126,70 +119,21 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
         }
     }
 
-    class RepoAdapterItem(val repo: RepoUI) :
-        AbstractFlexibleItem<RepoAdapterItem.RepoViewHolder>() {
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.options_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
 
-
-        override fun equals(other: Any?): Boolean {
-            if (other is RepoAdapterItem) {
-                return other.repo.id == repo.id
-            }
-            return false
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+        R.id.action_favorite -> {
+//            nav.navigate()
+            true
         }
-
-        override fun hashCode(): Int {
-            return repo.id.hashCode()
-        }
-
-        override fun getLayoutRes(): Int {
-            return R.layout.repo_list_item
-        }
-
-        override fun createViewHolder(
-            view: View,
-            adapter: FlexibleAdapter<IFlexible<*>?>?
-        ): RepoViewHolder {
-            return RepoViewHolder(view, adapter)
-        }
-
-        override fun bindViewHolder(
-            adapter: FlexibleAdapter<IFlexible<*>?>?, holder: RepoViewHolder,
-            position: Int,
-            payloads: List<Any>
-        ) {
-            holder.tvRepoName.text = repo.name
-            holder.tvRepoDescription.text = repo.description
-            @DrawableRes val imgResId = getFavoriteImageResId()
-            holder.ivIsFavorite.setImageResource(imgResId)
-        }
-
-        private fun getFavoriteImageResId(isFavorite: Boolean = repo.isFavorite) = if (isFavorite) {
-            R.drawable.ic_heart_full
-        } else {
-            R.drawable.ic_heart_empty
-        }
-
-        fun isFavorite(): Boolean = repo.isFavorite
-
-        fun toggleFavorite(ivFavorite: ImageView) {
-            val isFavorite = !repo.isFavorite
-            repo.isFavorite = isFavorite
-            val imgResId = getFavoriteImageResId(isFavorite)
-            ivFavorite.setImageResource(imgResId)
-        }
-
-
-        class RepoViewHolder(view: View, adapter: FlexibleAdapter<*>?) :
-            FlexibleViewHolder(view, adapter) {
-            val tvRepoName: TextView = view.findViewById(R.id.tvRepoName)
-            val tvRepoDescription: TextView = view.findViewById(R.id.tvRepoDescription)
-            val ivIsFavorite: ImageView = view.findViewById(R.id.ivFavorite)
-
-            init {
-                ivIsFavorite.setOnClickListener(this)
-            }
+        else -> {
+            super.onOptionsItemSelected(item)
         }
     }
+
 
     inner class SimpleEndlessScrollListener : FlexibleAdapter.EndlessScrollListener {
         override fun noMoreLoad(newItemsSize: Int) {
@@ -201,4 +145,6 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
         }
 
     }
+
+
 }
