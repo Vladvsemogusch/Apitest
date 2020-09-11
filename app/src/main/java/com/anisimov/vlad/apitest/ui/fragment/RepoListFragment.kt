@@ -2,7 +2,6 @@ package com.anisimov.vlad.apitest.ui.fragment
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -11,11 +10,9 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.ImageView
 import android.widget.SearchView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.anisimov.vlad.apitest.R
-import com.anisimov.vlad.apitest.domain.model.RepoUI
 import com.anisimov.vlad.apitest.domain.viewmodel.RepoListViewModel
 import com.anisimov.vlad.apitest.ui.item.RepoAdapterItem
 import com.anisimov.vlad.apitest.ui.view.ProgressItem
@@ -135,7 +132,7 @@ class RepoListFragment : BaseFragment<RepoListViewModel>() {
 
     override fun onPause() {
         super.onPause()
-        viewModel.forgetLastQuery()
+        viewModel.resetQuery()
     }
 
 
