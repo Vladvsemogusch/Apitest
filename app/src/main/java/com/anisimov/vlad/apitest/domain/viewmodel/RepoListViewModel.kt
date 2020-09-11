@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.anisimov.vlad.apitest.data.repository.RepoListRepository
-import com.anisimov.vlad.apitest.domain.model.NewReposEvent
+import com.anisimov.vlad.apitest.domain.model.event.NewReposEvent
 import com.hadilq.liveevent.LiveEvent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -40,7 +40,7 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
         searchJobInProgress?.cancel()
         oNewSearchLoading.value = true
         lastQuery = query
-        searchJobInProgress = viewModelScope.launch {
+        val job = viewModelScope.launch {
             val newSearchResultUI = repo.getNewSearchResult(query)
             totalItemCount.value = newSearchResultUI.totalCount
             totalPageCount =
@@ -50,7 +50,8 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
             oNewSearchLoading.postValue(false)
             oNewReposEvent.postValue(event)
         }
-        searchJobInProgress?.invokeOnCompletion { cause ->
+        searchJobInProgress = job
+        job.invokeOnCompletion { cause ->
             if (cause is CancellationException) {
                 oNewSearchLoading.value = false
                 oNewReposEvent.postValue(NewReposEvent(true, ArrayList()))
@@ -63,13 +64,14 @@ class RepoListViewModel(app: Application) : BaseViewModel<RepoListRepository>(ap
             oNewReposEvent.postValue(NewReposEvent(false, null))
             return
         }
-        searchJobInProgress = viewModelScope.launch {
+        val job = viewModelScope.launch {
             val moreRepos =
                 repo.getMoreSearchResults(lastQuery, currentPage + 1, totalItemCount.value!!)
             currentPage++
             oNewReposEvent.postValue(NewReposEvent(false, moreRepos))
         }
-        searchJobInProgress?.invokeOnCompletion { cause ->
+        searchJobInProgress = job
+        job.invokeOnCompletion { cause ->
             if (cause is CancellationException) {
                 oNewReposEvent.postValue(NewReposEvent(false, null))
             }
