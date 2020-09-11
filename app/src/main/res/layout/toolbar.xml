@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/colorPrimary"
+    android:layout_width="match_parent"
+    android:layout_height="56dp">
+
+    <SearchView
+        android:id="@+id/searchView"
+        android:layout_gravity="center"
+        android:theme="@style/SearchViewTheme"
+        android:queryHint="@string/search_hint"
+        android:iconifiedByDefault="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</FrameLayout>

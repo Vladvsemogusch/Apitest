@@ -1,10 +1,14 @@
 package com.anisimov.vlad.apitest.ui.activity
 
 import android.annotation.SuppressLint
+import android.app.SearchManager
+import android.content.Context
 import android.os.Bundle
+import android.view.Menu
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.widget.SearchView
 import android.widget.TextView
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,51 +21,75 @@ import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import eu.davidea.flexibleadapter.items.IFlexible
 import eu.davidea.viewholders.FlexibleViewHolder
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.toolbar.*
 
 
 class RepoListActivity : BaseActivity<RepoListViewModel>() {
-    lateinit var adapter: FlexibleAdapter<AbstractFlexibleItem<*>>
-    lateinit var progressItem: ProgressItem
+    private lateinit var listAdapter: FlexibleAdapter<AbstractFlexibleItem<*>>
+    private lateinit var progressItem: ProgressItem
     override fun provideViewModelClass(): Class<RepoListViewModel> = RepoListViewModel::class.java
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        //  Make room for SearchView
+        title = ""
         setupRepoList()
         setupLoading()
+        setupSearch()
+    }
+
+    private fun setupSearch() {
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                handleNewSearch(query)
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                //   Could add live search with debounce
+                return false
+            }
+        })
+
+    }
+
+
+    private fun handleNewSearch(query: String) {
+        viewModel.newSearch(query)
     }
 
     @SuppressLint("Range")
     private fun setupRepoList() {
         val layoutManager = LinearLayoutManager(this)
         rvRepoList.layoutManager = layoutManager
-        adapter = FlexibleAdapter<AbstractFlexibleItem<*>>(ArrayList())
+        listAdapter = FlexibleAdapter<AbstractFlexibleItem<*>>(ArrayList())
         rvRepoList.addItemDecoration(
             DividerItemDecoration(
                 rvRepoList.context,
                 layoutManager.orientation
             )
         )
-        rvRepoList.adapter = adapter
+        rvRepoList.adapter = listAdapter
         viewModel.oNewReposEvent.observe(this) { newReposEvent ->
             if (!newReposEvent.newSearch && newReposEvent.repos == null) {
-                adapter.onLoadMoreComplete(null)
+                listAdapter.onLoadMoreComplete(null)
                 return@observe
             }
             val adapterItems = newReposEvent.repos!!.map { RepoAdapterItem(it) }
             if (newReposEvent.newSearch) {
-                adapter.clear()
-                adapter.addItems(-1, adapterItems)
+                listAdapter.clear()
+                listAdapter.addItems(-1, adapterItems)
             } else {
-                adapter.onLoadMoreComplete(adapterItems)
+                listAdapter.onLoadMoreComplete(adapterItems)
             }
 
         }
-        viewModel.newSearch("tetris")
-        //  Set endless scroll
+        //  Setup endless scroll
         progressItem = ProgressItem()
-        adapter.setEndlessScrollListener(SimpleEndlessScrollListener(), progressItem)
-        viewModel.totalItemCount.observe(this) { adapter.setEndlessTargetCount(it) }
+        listAdapter.setEndlessScrollListener(SimpleEndlessScrollListener(), progressItem)
+        viewModel.totalItemCount.observe(this) { listAdapter.setEndlessTargetCount(it) }
     }
 
     private fun setupLoading() {
@@ -72,6 +100,13 @@ class RepoListActivity : BaseActivity<RepoListViewModel>() {
                 loadingOverlay.visibility = GONE
             }
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.options_menu, menu)
+        val searchView = menu.findItem(R.id.search).actionView as SearchView
+        searchView.isIconifiedByDefault = false
+        return true
     }
 
     class RepoAdapterItem(private val repo: RepoUI) :
